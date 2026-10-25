@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "bits.hpp"  // FormatError: ошибки формата бросаются наружу
+
 namespace szhatie {
 
 std::uint32_t crc32(std::span<const std::uint8_t> data, std::uint32_t crc = 0);
