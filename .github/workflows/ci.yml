@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: "Linux GCC + ASan/UBSan", os: ubuntu-latest, flags: "-DSZHATIE_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug" }
+          - { name: "Windows MSVC", os: windows-latest, flags: "" }
+          - { name: "macOS Clang", os: macos-latest, flags: "-DCMAKE_BUILD_TYPE=Release" }
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -B build ${{ matrix.flags }}
+      - run: cmake --build build --config Release --parallel
+      - run: ctest --test-dir build -C Release --output-on-failure
+
+  gzip-interop:
+    name: Совместимость с GNU gzip и замер
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DSZHATIE_TESTS=OFF && cmake --build build --parallel
+      - run: bash scripts/interop.sh build/szhatie
